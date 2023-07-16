@@ -10,6 +10,7 @@
 #    General Public License for more details.
 # 
 #    License can be found in < https://github.com/Ayush7445/telegram-auto_forwarder/blob/main/License > .
+import time
 from telethon import TelegramClient, events
 from decouple import config
 import logging
@@ -22,11 +23,8 @@ print("Starting...")
 APP_ID = config("APP_ID", default=None, cast=int)
 API_HASH = config("API_HASH", default=None)
 SESSION = config("SESSION")
-FROM_ = config("FROM_CHANNEL")
-TO_ = config("TO_CHANNEL")
-
-FROM = [int(i) for i in FROM_.split()]
-TO = [int(i) for i in TO_.split()]
+FROM_CHANNEL = config("FROM_CHANNEL", default=None)
+TO_CHANNEL = config("TO_CHANNEL", default=None)
 
 try:
     BotzHubUser = TelegramClient(StringSession(SESSION), APP_ID, API_HASH)
@@ -35,19 +33,19 @@ except Exception as ap:
     print(f"ERROR - {ap}")
     exit(1)
 
-@BotzHubUser.on(events.NewMessage(incoming=True, chats=FROM))
-async def sender_bH(event):
-    if event.message.video:  # Only forward if the message contains a video
-        for i in TO:
+async def forward_existing_videos(source_channel, target_channel):
+    async for message in BotzHubUser.iter_messages(source_channel):
+        if message.media and message.media.document and message.media.document.mime_type.startswith('video'):
             try:
-                await BotzHubUser.send_message(
-                    i,
-                    event.message
-                )
-                print(f"Video forwarded from {event.chat_id} to {i}")
+                await BotzHubUser.forward_messages(target_channel, message)
+                print(f"Video forwarded from {source_channel} to {target_channel}")
             except Exception as e:
                 print(e)
 
 print("Bot has started.")
+
+# Add your source channel or chat ID here
+if FROM_CHANNEL and TO_CHANNEL:
+    BotzHubUser.loop.run_until_complete(forward_existing_videos(FROM_CHANNEL, TO_CHANNEL))
+
 BotzHubUser.run_until_disconnected()
-    
