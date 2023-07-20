@@ -33,7 +33,7 @@ except Exception as ap:
 
 @BotzHubUser.on(events.NewMessage(outgoing=True))
 async def forward_to_channel(event):
-    if event.is_channel and event.chat.username == "your_bot_username":  # Replace 'your_bot_username' with your bot's username
+    if event.is_channel and event.chat.username == "@AKFilte1bot":  # Replace 'your_bot_username' with your bot's username
         try:
             await BotzHubUser.send_message(
                 TO_CHANNEL,
